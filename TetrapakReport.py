@@ -14,13 +14,15 @@ import threading
 import webbrowser
 import socket
 import time
+import psutil
 from configparser import ConfigParser
 
 # ── Config ──
-GITHUB_OWNER  = "linhttmsk"
-GITHUB_REPO   = "TetrapakReport-"
-GITHUB_API    = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
-PORT          = 8502
+GITHUB_OWNER = "linhttmsk"
+GITHUB_REPO  = "TetrapakReport-"
+GITHUB_API   = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
+GITHUB_TOKEN = "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"  # ← thêm dòng này
+PORT         = 8502
 
 
 def resolve_path(path):
@@ -32,7 +34,6 @@ def resolve_path(path):
 
 
 def get_current_version() -> str:
-    """Read version from config.ini"""
     try:
         ini = resolve_path(".streamlit/config.ini")
         parser = ConfigParser()
@@ -43,23 +44,24 @@ def get_current_version() -> str:
 
 
 def get_latest_version() -> tuple:
-    """
-    Check GitHub Releases API for latest version.
-    Returns (version_str, download_url) or ("", "") if unreachable.
-    """
     try:
-        resp = requests.get(GITHUB_API, timeout=5)
+        headers = {
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github+json"
+        }
+        resp = requests.get(GITHUB_API, timeout=5, headers=headers)
         if resp.status_code != 200:
             return "", ""
-        data = resp.json()
-        tag     = data.get("tag_name", "").lstrip("v")
-        assets  = data.get("assets", [])
-        # Find Windows installer
-        dl_url  = ""
+        data   = resp.json()
+        tag    = data.get("tag_name", "").lstrip("v")
+        assets = data.get("assets", [])
+        dl_url = ""
         for asset in assets:
             name = asset.get("name", "")
             if name.endswith("_Setup.exe") or name.endswith(".exe"):
-                dl_url = asset.get("browser_download_url", "")
+                # Dùng asset id để download đúng cách
+                asset_id = asset.get("id")
+                dl_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/assets/{asset_id}"
                 break
         return tag, dl_url
     except:
@@ -67,7 +69,6 @@ def get_latest_version() -> tuple:
 
 
 def compare_version(v1: str, v2: str) -> int:
-    """Returns 1 if v1 > v2, -1 if v1 < v2, 0 if equal."""
     try:
         t1 = tuple(int(x) for x in v1.split("."))
         t2 = tuple(int(x) for x in v2.split("."))
@@ -79,48 +80,50 @@ def compare_version(v1: str, v2: str) -> int:
 
 
 def download_and_install(dl_url: str, new_version: str):
-    """Download installer and run silently."""
     try:
         print(f"[Update] Downloading v{new_version}...")
-        resp = requests.get(dl_url, timeout=60, stream=True)
+        
+        # GitHub private repo assets cần 2 bước
+        # Bước 1: Get redirect URL
+        session = requests.Session()
+        session.headers.update({
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Accept": "application/octet-stream"
+        })
+        
+        resp = session.get(dl_url, timeout=60, stream=True, allow_redirects=True)
+        
+        print(f"[Update] Status: {resp.status_code}")
+        print(f"[Update] URL: {resp.url}")
+        
         if resp.status_code != 200:
             print(f"[Update] Download failed: {resp.status_code}")
             return
-
-        # Save to temp file
+            
         tmp = tempfile.NamedTemporaryFile(
-            delete=False,
-            suffix=".exe",
+            delete=False, suffix=".exe",
             prefix="TetrapakReport_Setup_"
         )
         for chunk in resp.iter_content(chunk_size=8192):
             tmp.write(chunk)
         tmp.close()
-
         print(f"[Update] Installing v{new_version}...")
-        # Run installer silently — /SILENT = no UI, /NORESTART = no restart
         subprocess.Popen([tmp.name, "/SILENT", "/NORESTART"])
         print("[Update] Installer launched — app will close now.")
         sys.exit(0)
-
     except Exception as e:
         print(f"[Update] Error: {e}")
 
 
 def check_and_update():
-    """Check GitHub for new version and prompt user."""
     current = get_current_version()
     print(f"[Version] Current: {current}")
-
     latest, dl_url = get_latest_version()
     if not latest:
         print("[Version] Cannot reach GitHub — skipping update check.")
         return
-
     print(f"[Version] Latest: {latest}")
-
     if compare_version(latest, current) > 0:
-        # Show simple console prompt
         print(f"\n{'='*50}")
         print(f"  New version v{latest} available! (current: v{current})")
         print(f"{'='*50}")
@@ -128,7 +131,6 @@ def check_and_update():
             ans = input("  Update now? (y/n): ").strip().lower()
         except:
             ans = "n"
-
         if ans == "y" and dl_url:
             download_and_install(dl_url, latest)
         else:
@@ -137,32 +139,50 @@ def check_and_update():
         print("[Version] Already up to date.")
 
 
-def wait_for_server(port=PORT, timeout=30) -> bool:
-    """Wait until Streamlit server is ready."""
+def kill_port(port: int):
+    """Kill any process using the port."""
+    try:
+        for conn in psutil.net_connections():
+            if conn.laddr.port == port and conn.pid:
+                try:
+                    psutil.Process(conn.pid).kill()
+                    print(f"[Port] Killed process {conn.pid} on port {port}")
+                except:
+                    pass
+    except:
+        pass
+
+
+def wait_for_server(port=PORT, timeout=60) -> bool:
     start = time.time()
     while time.time() - start < timeout:
         try:
-            with socket.create_connection(("localhost", port), timeout=1):
+            with socket.create_connection(("localhost", port), timeout=2):
+                time.sleep(1)
                 return True
         except (ConnectionRefusedError, OSError):
-            time.sleep(0.5)
+            time.sleep(1)
     return False
 
 
 def open_browser():
-    """Wait for server ready then open browser."""
+    time.sleep(3)
     if wait_for_server(PORT):
         webbrowser.open(f"http://localhost:{PORT}")
 
 
 if __name__ == "__main__":
-    # 1. Check for updates
+    # 1. Kill old process on port
+    kill_port(PORT)
+    time.sleep(1)
+
+    # 2. Check for updates
     check_and_update()
 
-    # 2. Open browser after server is ready
+    # 3. Open browser after server ready
     threading.Thread(target=open_browser, daemon=True).start()
 
-    # 3. Launch Streamlit
+    # 4. Launch Streamlit
     sys.argv = [
         "streamlit",
         "run",
