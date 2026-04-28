@@ -124,17 +124,19 @@ def check_and_update():
         return
     print(f"[Version] Latest: {latest}")
     if compare_version(latest, current) > 0:
-        print(f"\n{'='*50}")
-        print(f"  New version v{latest} available! (current: v{current})")
-        print(f"{'='*50}")
-        try:
-            ans = input("  Update now? (y/n): ").strip().lower()
-        except:
-            ans = "n"
-        if ans == "y" and dl_url:
+        # Dùng popup thay vì input()
+        import ctypes
+        result = ctypes.windll.user32.MessageBoxW(
+            0,
+            f"New version v{latest} available!\nCurrent: v{current}\n\nUpdate now?",
+            "TetrapakReport Update",
+            4  # MB_YESNO
+        )
+        # result = 6 là Yes, 7 là No
+        if result == 6 and dl_url:
             download_and_install(dl_url, latest)
         else:
-            print("[Version] Skipping update. Launching current version...")
+            print("[Version] Skipping update.")
     else:
         print("[Version] Already up to date.")
 
