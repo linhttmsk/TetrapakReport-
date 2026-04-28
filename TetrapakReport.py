@@ -153,7 +153,7 @@ def kill_port(port: int):
         pass
 
 
-def wait_for_server(port=PORT, timeout=60) -> bool:
+def wait_for_server(port=PORT, timeout=120) -> bool:
     start = time.time()
     while time.time() - start < timeout:
         try:
@@ -167,11 +167,12 @@ def wait_for_server(port=PORT, timeout=60) -> bool:
 
 def open_browser():
     time.sleep(3)
-    if wait_for_server(PORT):
+    if wait_for_server(PORT, timeout=120):  # tăng timeout lên 120s
         webbrowser.open(f"http://localhost:{PORT}")
 
 
 if __name__ == "__main__":
+    
     # 1. Kill old process on port
     kill_port(PORT)
     time.sleep(1)
