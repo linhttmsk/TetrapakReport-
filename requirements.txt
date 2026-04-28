@@ -1,0 +1,8 @@
+streamlit>=1.32.0
+pyodbc>=4.0.39
+pandas>=2.0.0
+Pillow>=10.0.0
+requests>=2.31.0
+streamlit-cookies-manager>=0.2.0
+hydralit-components>=1.0.10
+pyinstaller>=6.0.0
