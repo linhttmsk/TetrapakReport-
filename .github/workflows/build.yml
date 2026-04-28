@@ -20,18 +20,22 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build exe
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+        shell: cmd
+
+      - name: Build exe with PyInstaller
         run: |
           pyinstaller --onefile --noconsole `
             --name "TetrapakReport" `
-            --icon "scripts/icon.ico" `
             --add-data "app/.streamlit;app/.streamlit" `
             --add-data "app/src;app/src" `
             --add-data "app/pages;app/pages" `
+            --add-data "app/Home.py;app" `
             TetrapakReport.py
 
-      - name: Build installer
-        run: iscc scripts/setup.iss
+      - name: Build installer with Inno Setup
+        run: iscc scripts\setup.iss
         shell: cmd
 
       - uses: actions/upload-artifact@v4
@@ -53,14 +57,14 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build app
+      - name: Build app with PyInstaller
         run: |
           pyinstaller --onefile --noconsole \
             --name "TetrapakReport" \
-            --icon "scripts/icon.icns" \
             --add-data "app/.streamlit:app/.streamlit" \
             --add-data "app/src:app/src" \
             --add-data "app/pages:app/pages" \
+            --add-data "app/Home.py:app" \
             TetrapakReport.py
 
       - name: Zip Mac app
@@ -74,6 +78,8 @@ jobs:
   release:
     needs: [build-windows, build-mac]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -91,10 +97,8 @@ jobs:
           name: "TetrapakReport ${{ github.ref_name }}"
           body: |
             ## TetrapakReport ${{ github.ref_name }}
-            
-            ### Download
-            - **Windows**: `TetrapakReport_Setup.exe`
-            - **Mac**: `TetrapakReport_Mac.zip`
+            - **Windows**: TetrapakReport_Setup.exe
+            - **Mac**: TetrapakReport_Mac.zip
           files: |
             artifacts/windows/TetrapakReport_Setup.exe
             artifacts/mac/TetrapakReport_Mac.zip
