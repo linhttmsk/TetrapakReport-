@@ -27,6 +27,7 @@ Name: "desktopicon"; Description: "Create desktop shortcut"
 
 [Files]
 Source: "..\dist\TetrapakReport.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\app\*"; DestDir: "{app}\app"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
