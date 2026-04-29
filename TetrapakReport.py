@@ -215,7 +215,7 @@ if __name__ == "__main__":
         "--global.developmentMode=false",
         "--client.showSidebarNavigation=False",
         "--client.showErrorDetails=False",
-        f"--server.port={PORT}",
-        "--server.headless=false",
+        # f"--server.port={PORT}",
+        # "--server.headless=false",
     ]
     sys.exit(stcli.main())
