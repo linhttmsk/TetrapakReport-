@@ -43,7 +43,7 @@ function InitializeSetup(): Boolean;
 var
   ResultCode: Integer;
 begin
-  // Kill TetrapakReport process if running
   Exec('taskkill.exe', '/F /IM TetrapakReport.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(2000);  // ← thêm dòng này — chờ 2 giây sau khi kill
   Result := True;
 end;
