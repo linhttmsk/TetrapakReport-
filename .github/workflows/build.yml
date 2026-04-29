@@ -45,7 +45,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          path: scripts/Output/TetrapakReport_Setup.exe
+          path: scripts/Output/TetrapakReport_Setup*.exe
 
   release:
     needs: [build-windows]
@@ -66,6 +66,6 @@ jobs:
             ## TetrapakReport ${{ github.ref_name }}
             - **Windows**: TetrapakReport_Setup.exe
           files: |
-            artifacts/windows/TetrapakReport_Setup.exe
+            artifacts/windows/TetrapakReport_Setup*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
