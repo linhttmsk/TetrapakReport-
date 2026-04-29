@@ -28,6 +28,7 @@ jobs:
         run: |
           pyinstaller --onefile --noconsole `
             --name "TetrapakReport" `
+            --icon "scripts/icon.ico" `
             --copy-metadata streamlit `
             --copy-metadata pyodbc `
             --copy-metadata pandas `
