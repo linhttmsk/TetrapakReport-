@@ -1,5 +1,5 @@
 #define MyAppName "TetrapakReport"
-#define MyAppVersion "1.0.19"
+#define MyAppVersion "1.0.20"
 #define MyAppPublisher "MEK AI Automation"
 #define MyAppExeName "TetrapakReport.exe"
 
@@ -12,7 +12,7 @@ DefaultDirName={localappdata}\TetrapakReport
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=Output
-OutputBaseFilename=TetrapakReport_Setup
+OutputBaseFilename=TetrapakReport_Setup_{#MyAppVersion}
 SetupIconFile=icon.ico
 Compression=lzma
 SolidCompression=yes

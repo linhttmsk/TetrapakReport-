@@ -127,8 +127,13 @@ def download_and_install(dl_url: str, new_version: str):
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
         )
         
+        time.sleep(2)  # chờ installer start
+        
+        # Kill streamlit process
+        kill_port(PORT)
         time.sleep(1)
-        os._exit(0)  # Exit after installer is detached
+        
+        os._exit(0)  # exit sau
         
     except Exception as e:
         print(f"[Update] Error: {e}")
