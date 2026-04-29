@@ -9,9 +9,10 @@ from configparser import ConfigParser
 import os, sys, getpass
 
 # ── Config ──
-script_path = sys.argv[0]
-folder_path0 = os.path.dirname(os.path.abspath(script_path))
-inifile = os.path.join(folder_path0, ".streamlit", "config.ini")
+# Use __file__ to get correct path regardless of how Streamlit was launched
+current_file = os.path.abspath(__file__)  # ...app/src/db.py
+app_folder = os.path.dirname(os.path.dirname(current_file))  # ...app/
+inifile = os.path.join(app_folder, ".streamlit", "config.ini")
 parser = ConfigParser()
 parser.read(inifile)
 

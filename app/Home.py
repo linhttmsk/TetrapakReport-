@@ -8,8 +8,9 @@ from configparser import ConfigParser
 import os, sys
 
 # ── Config ──
-script_path = sys.argv[0]
-folder_path0 = os.path.dirname(os.path.abspath(script_path))
+# Use __file__ to get correct path regardless of how Streamlit was launched
+current_file = os.path.abspath(__file__)  # ...app/Home.py
+folder_path0 = os.path.dirname(current_file)  # ...app/
 inifile = os.path.join(folder_path0, ".streamlit", "config.ini")
 parser = ConfigParser()
 parser.read(inifile)
