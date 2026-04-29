@@ -26,7 +26,7 @@ jobs:
 
       - name: Build exe with PyInstaller
         run: |
-          pyinstaller --onefile --noconsole `
+          pyinstaller --onefile `
             --name "TetrapakReport" `
             --icon "scripts/icon.ico" `
             --copy-metadata streamlit `
