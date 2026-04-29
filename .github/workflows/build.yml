@@ -46,40 +46,8 @@ jobs:
           name: windows-installer
           path: scripts/Output/TetrapakReport_Setup.exe
 
-  build-mac:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build app with PyInstaller
-        run: |
-          pyinstaller --onefile --noconsole \
-            --name "TetrapakReport" \
-            --add-data "app/.streamlit:app/.streamlit" \
-            --add-data "app/src:app/src" \
-            --add-data "app/pages:app/pages" \
-            --add-data "app/Home.py:app" \
-            TetrapakReport.py
-
-      - name: Zip Mac app
-        run: cd dist && zip -r TetrapakReport_Mac.zip TetrapakReport
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mac-app
-          path: dist/TetrapakReport_Mac.zip
-
   release:
-    needs: [build-windows, build-mac]
+    needs: [build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -89,11 +57,6 @@ jobs:
           name: windows-installer
           path: artifacts/windows
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: mac-app
-          path: artifacts/mac
-
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -101,9 +64,7 @@ jobs:
           body: |
             ## TetrapakReport ${{ github.ref_name }}
             - **Windows**: TetrapakReport_Setup.exe
-            - **Mac**: TetrapakReport_Mac.zip
           files: |
             artifacts/windows/TetrapakReport_Setup.exe
-            artifacts/mac/TetrapakReport_Mac.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

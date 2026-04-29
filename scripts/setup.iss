@@ -18,7 +18,9 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=lowest
-CloseApplications=yes
+CloseApplications=force
+UninstallDisplayIcon={app}\{#MyAppExeName}
+RestartIfNeededByMUI=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

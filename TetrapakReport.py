@@ -106,18 +106,29 @@ def download_and_install(dl_url: str, new_version: str):
             tmp.write(chunk)
         tmp.close()
         
-        print(f"[Update] Waiting for resources to release...")
-        time.sleep(2)  # Give file handles time to close
+        print(f"[Update] Forcefully closing running app...")
+        # Kill TetrapakReport.exe with taskkill to force release all file handles
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/IM", "TetrapakReport.exe"], 
+                stderr=subprocess.DEVNULL,
+                timeout=5
+            )
+            print("[Update] App process killed")
+        except:
+            pass
+        
+        time.sleep(3)  # Wait longer for file handles to fully release
         
         print(f"[Update] Installing v{new_version}...")
-        # Launch installer with proper parameters
+        # Launch installer with proper detachment
         subprocess.Popen(
             [tmp.name, "/SILENT", "/NORESTART"],
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP  # Detach process
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
         )
         
         time.sleep(1)
-        os._exit(0)  # Now exit after installer is detached
+        os._exit(0)  # Exit after installer is detached
         
     except Exception as e:
         print(f"[Update] Error: {e}")
