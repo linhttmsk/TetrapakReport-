@@ -1,5 +1,5 @@
 #define MyAppName "TetrapakReport"
-#define MyAppVersion "1.0.12"
+#define MyAppVersion "1.0.14"
 #define MyAppPublisher "MEK AI Automation"
 #define MyAppExeName "TetrapakReport.exe"
 
@@ -20,7 +20,6 @@ WizardStyle=modern
 PrivilegesRequired=lowest
 CloseApplications=force
 UninstallDisplayIcon={app}\{#MyAppExeName}
-RestartIfNeededByMUI=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
