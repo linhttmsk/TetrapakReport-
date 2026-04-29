@@ -26,14 +26,8 @@ PORT         = 8502
 
 
 def resolve_path(path):
-    return os.path.abspath(os.path.join(os.getcwd(), "app", path))
-
-# def resolve_path(path):
-#     if getattr(sys, 'frozen', False):
-#         base = os.path.dirname(sys.executable)
-#     else:
-#         base = os.path.dirname(os.path.abspath(__file__))
-#     return os.path.join(base, "app", path)
+    resolved_path = os.path.abspath(os.path.join(os.getcwd() + r"\\0.settings\\app", path))
+    return resolved_path
 
 
 def get_current_version() -> str:
@@ -216,7 +210,8 @@ if __name__ == "__main__":
         "--global.developmentMode=false",
         "--client.showSidebarNavigation=False",
         "--client.showErrorDetails=False",
-        # f"--server.port={PORT}",
-        # "--server.headless=false",
+        f"--server.port={PORT}",
+        "--server.headless=false",
+        "--logger.level=debug",
     ]
-    stcli.main()
+    sys.exit(stcli.main())
