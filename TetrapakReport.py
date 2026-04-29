@@ -25,9 +25,11 @@ GITHUB_TOKEN = "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"  # ← thêm dòng nà
 PORT         = 8502
 
 
+
+
 def resolve_path(path):
     if getattr(sys, 'frozen', False):
-        base = sys._MEIPASS
+        base = os.path.dirname(sys.executable)
     else:
         base = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base, "app", path)
