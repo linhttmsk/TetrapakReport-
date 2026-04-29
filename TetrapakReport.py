@@ -123,17 +123,15 @@ def download_and_install(dl_url: str, new_version: str):
         print(f"[Update] Installing v{new_version}...")
         # Launch installer with proper detachment
         subprocess.Popen(
-            [tmp.name, "/SILENT", "/NORESTART"],
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+            [tmp.name, "/SILENT", "/NORESTART"]
         )
-        
-        time.sleep(2)  # chờ installer start
-        
-        # Kill streamlit process
+
+        time.sleep(2)
+
         kill_port(PORT)
         time.sleep(1)
-        
-        os._exit(0)  # exit sau
+
+        os._exit(0)
         
     except Exception as e:
         print(f"[Update] Error: {e}")
