@@ -1,5 +1,5 @@
 #define MyAppName "TetrapakReport"
-#define MyAppVersion "1.0.40"
+#define MyAppVersion "1.0.41"
 #define MyAppPublisher "MEK AI Automation"
 #define MyAppExeName "TetrapakReport.exe"
 

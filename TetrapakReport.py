@@ -26,7 +26,7 @@ PORT         = 8502
 
 
 def resolve_path(path):
-    resolved_path = os.path.abspath(os.path.join(os.getcwd() + r"\\0.settings\\app", path))
+    resolved_path = os.path.abspath(os.path.join(os.getcwd() + r"\\app", path))
     return resolved_path
 
 
