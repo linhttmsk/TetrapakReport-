@@ -25,14 +25,15 @@ GITHUB_TOKEN = "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"  # ← thêm dòng nà
 PORT         = 8502
 
 
-
-
 def resolve_path(path):
-    if getattr(sys, 'frozen', False):
-        base = os.path.dirname(sys.executable)
-    else:
-        base = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base, "app", path)
+    return os.path.abspath(os.path.join(os.getcwd(), "app", path))
+
+# def resolve_path(path):
+#     if getattr(sys, 'frozen', False):
+#         base = os.path.dirname(sys.executable)
+#     else:
+#         base = os.path.dirname(os.path.abspath(__file__))
+#     return os.path.join(base, "app", path)
 
 
 def get_current_version() -> str:
@@ -200,11 +201,11 @@ if __name__ == "__main__":
     check_and_update()
 
 
-    home_path = resolve_path("Home.py")
-    with open(os.path.join(os.path.dirname(sys.executable), "debug.log"), "w") as f:
-        f.write(f"exe: {sys.executable}\n")
-        f.write(f"home: {home_path}\n")
-        f.write(f"exists: {os.path.exists(home_path)}\n")
+    # home_path = resolve_path("Home.py")
+    # with open(os.path.join(os.path.dirname(sys.executable), "debug.log"), "w") as f:
+    #     f.write(f"exe: {sys.executable}\n")
+    #     f.write(f"home: {home_path}\n")
+    #     f.write(f"exists: {os.path.exists(home_path)}\n")
 
     # 3. Launch Streamlit
     print("[Start] Launching Streamlit...")
