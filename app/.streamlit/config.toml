@@ -5,7 +5,7 @@ secondaryBackgroundColor = "#16213e"
 textColor = "#e2e8f0"
 
 [server]
-port = 8501
+port = 8502
 headless = false
 
 [browser]
