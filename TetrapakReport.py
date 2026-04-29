@@ -186,11 +186,8 @@ def wait_for_server(port=PORT, timeout=120) -> bool:
     return False
 
 
+
 if __name__ == "__main__":
-    
-    # 0. Set app directory for Streamlit to find pages
-    app_dir = resolve_path(".")
-    os.chdir(app_dir)  # Change working dir to app folder
     
     # 1. Kill old process on port
     print(f"[Start] Clearing port {PORT}...")
@@ -200,7 +197,7 @@ if __name__ == "__main__":
     # 2. Check for updates
     check_and_update()
 
-    # 3. Launch Streamlit (auto-open browser via config)
+    # 3. Launch Streamlit
     print("[Start] Launching Streamlit...")
     sys.argv = [
         "streamlit",
