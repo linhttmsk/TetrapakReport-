@@ -83,8 +83,6 @@ def download_and_install(dl_url: str, new_version: str):
     try:
         print(f"[Update] Downloading v{new_version}...")
         
-        # GitHub private repo assets cần 2 bước
-        # Bước 1: Get redirect URL
         session = requests.Session()
         session.headers.update({
             "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -107,11 +105,20 @@ def download_and_install(dl_url: str, new_version: str):
         for chunk in resp.iter_content(chunk_size=8192):
             tmp.write(chunk)
         tmp.close()
+        
+        print(f"[Update] Waiting for resources to release...")
+        time.sleep(2)  # Give file handles time to close
+        
         print(f"[Update] Installing v{new_version}...")
-        # Launch installer & immediately exit to allow file replacement
-        subprocess.Popen([tmp.name, "/SILENT", "/NORESTART"])
-        time.sleep(0.5)
-        os._exit(0)  # Force exit process immediately
+        # Launch installer with proper parameters
+        subprocess.Popen(
+            [tmp.name, "/SILENT", "/NORESTART"],
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP  # Detach process
+        )
+        
+        time.sleep(1)
+        os._exit(0)  # Now exit after installer is detached
+        
     except Exception as e:
         print(f"[Update] Error: {e}")
 
