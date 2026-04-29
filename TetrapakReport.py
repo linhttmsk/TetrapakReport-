@@ -186,25 +186,18 @@ def wait_for_server(port=PORT, timeout=120) -> bool:
     return False
 
 
-def open_browser():
-    time.sleep(3)
-    if wait_for_server(PORT, timeout=120):  # tăng timeout lên 120s
-        webbrowser.open(f"http://localhost:{PORT}")
-
-
 if __name__ == "__main__":
     
     # 1. Kill old process on port
+    print(f"[Start] Clearing port {PORT}...")
     kill_port(PORT)
-    time.sleep(1)
+    time.sleep(2)
 
     # 2. Check for updates
     check_and_update()
 
-    # 3. Open browser after server ready
-    threading.Thread(target=open_browser, daemon=True).start()
-
-    # 4. Launch Streamlit
+    # 3. Launch Streamlit (auto-open browser via config)
+    print("[Start] Launching Streamlit...")
     sys.argv = [
         "streamlit",
         "run",
