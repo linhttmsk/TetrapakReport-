@@ -42,19 +42,22 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: no
 function InitializeSetup(): Boolean;
 var
   ResultCode: Integer;
+  AppPath: String;
   I: Integer;
 begin
   // Kill process
   Exec('taskkill.exe', '/F /IM TetrapakReport.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  
-  // Wait up to 10 seconds for file to be released
+
+  // Use localappdata path directly — {app} not available here
+  AppPath := ExpandConstant('{localappdata}') + '\TetrapakReport\TetrapakReport.exe';
+
+  // Wait up to 10 seconds for file lock to release
   I := 0;
-  while (I < 10) and FileExists(ExpandConstant('{app}\TetrapakReport.exe')) and 
-        not DeleteFile(ExpandConstant('{app}\TetrapakReport.exe')) do
+  while (I < 10) and FileExists(AppPath) and not DeleteFile(AppPath) do
   begin
     Sleep(1000);
     I := I + 1;
   end;
-  
+
   Result := True;
 end;
