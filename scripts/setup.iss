@@ -1,5 +1,5 @@
 #define MyAppName "TetrapakReport"
-#define MyAppVersion "1.0.15"
+#define MyAppVersion "1.0.17"
 #define MyAppPublisher "MEK AI Automation"
 #define MyAppExeName "TetrapakReport.exe"
 
@@ -42,8 +42,19 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: no
 function InitializeSetup(): Boolean;
 var
   ResultCode: Integer;
+  I: Integer;
 begin
+  // Kill process
   Exec('taskkill.exe', '/F /IM TetrapakReport.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Sleep(2000);  // ← thêm dòng này — chờ 2 giây sau khi kill
+  
+  // Wait up to 10 seconds for file to be released
+  I := 0;
+  while (I < 10) and FileExists(ExpandConstant('{app}\TetrapakReport.exe')) and 
+        not DeleteFile(ExpandConstant('{app}\TetrapakReport.exe')) do
+  begin
+    Sleep(1000);
+    I := I + 1;
+  end;
+  
   Result := True;
 end;
