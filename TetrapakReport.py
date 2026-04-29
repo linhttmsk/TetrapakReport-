@@ -199,6 +199,13 @@ if __name__ == "__main__":
     # 2. Check for updates
     check_and_update()
 
+
+    home_path = resolve_path("Home.py")
+    with open(os.path.join(os.path.dirname(sys.executable), "debug.log"), "w") as f:
+        f.write(f"exe: {sys.executable}\n")
+        f.write(f"home: {home_path}\n")
+        f.write(f"exists: {os.path.exists(home_path)}\n")
+
     # 3. Launch Streamlit
     print("[Start] Launching Streamlit...")
     sys.argv = [
