@@ -219,4 +219,4 @@ if __name__ == "__main__":
         # f"--server.port={PORT}",
         # "--server.headless=false",
     ]
-    sys.exit(stcli.main())
+    stcli.main()
