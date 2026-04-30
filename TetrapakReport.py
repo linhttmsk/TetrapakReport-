@@ -79,22 +79,21 @@ def compare_version(v1: str, v2: str) -> int:
 def download_and_install(dl_url: str, new_version: str):
     try:
         print(f"[Update] Downloading v{new_version}...")
-        
+
         session = requests.Session()
         session.headers.update({
             "Authorization": f"Bearer {GITHUB_TOKEN}",
             "Accept": "application/octet-stream"
         })
-        
+
         resp = session.get(dl_url, timeout=60, stream=True, allow_redirects=True)
-        
+
         print(f"[Update] Status: {resp.status_code}")
-        print(f"[Update] URL: {resp.url}")
-        
+
         if resp.status_code != 200:
             print(f"[Update] Download failed: {resp.status_code}")
             return
-            
+
         tmp = tempfile.NamedTemporaryFile(
             delete=False, suffix=".exe",
             prefix="TetrapakReport_Setup_"
@@ -102,31 +101,44 @@ def download_and_install(dl_url: str, new_version: str):
         for chunk in resp.iter_content(chunk_size=8192):
             tmp.write(chunk)
         tmp.close()
-        
-        print(f"[Update] Forcefully closing running app...")
-        # Kill TetrapakReport.exe with taskkill to force release all file handles
-        try:
-            subprocess.run(
-                ["taskkill", "/F", "/IM", "TetrapakReport.exe"], 
-                stderr=subprocess.DEVNULL,
-                timeout=5
-            )
-            print("[Update] App process killed")
-        except:
-            pass
-        
-        time.sleep(3)  # Wait longer for file handles to fully release
-        
-        print(f"[Update] Installing v{new_version}...")
-        # Launch installer with proper detachment
-        subprocess.Popen(
-            [tmp.name, "/SILENT", "/NORESTART"],
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+
+        print(f"[Update] Scheduling install of v{new_version}...")
+
+        # Write a batch script that waits for THIS process to fully exit,
+        # then runs the installer — avoids file-lock conflicts from replacing
+        # the running executable.
+        current_pid = os.getpid()
+        batch_content = (
+            "@echo off\n"
+            ":wait\n"
+            f'tasklist /FI "PID eq {current_pid}" 2>NUL | find /I /N "{current_pid}">NUL\n'
+            'if "%ERRORLEVEL%"=="0" (\n'
+            "    timeout /t 1 /nobreak > nul\n"
+            "    goto wait\n"
+            ")\n"
+            f'start "" /WAIT "{tmp.name}" /SILENT /NORESTART\n'
+            'del "%~f0"\n'
         )
-        
+
+        batch_file = tempfile.NamedTemporaryFile(
+            delete=False, suffix=".bat",
+            prefix="TetrapakReport_Update_",
+            mode="w"
+        )
+        batch_file.write(batch_content)
+        batch_file.close()
+
+        # DETACHED_PROCESS keeps the batch script alive after we exit
+        subprocess.Popen(
+            ["cmd.exe", "/c", batch_file.name],
+            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+            close_fds=True,
+        )
+
+        print("[Update] Update scheduled. Exiting so installer can replace files...")
         time.sleep(1)
-        os._exit(0)  # Exit after installer is detached
-        
+        os._exit(0)
+
     except Exception as e:
         print(f"[Update] Error: {e}")
 
