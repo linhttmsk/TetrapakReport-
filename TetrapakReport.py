@@ -8,7 +8,6 @@ import os
 import sys
 import json
 import requests
-import subprocess
 import tempfile
 import threading
 import webbrowser
@@ -78,6 +77,8 @@ def compare_version(v1: str, v2: str) -> int:
 
 def download_and_install(dl_url: str, new_version: str):
     try:
+        import ctypes
+
         print(f"[Update] Downloading v{new_version}...")
 
         session = requests.Session()
@@ -87,7 +88,6 @@ def download_and_install(dl_url: str, new_version: str):
         })
 
         resp = session.get(dl_url, timeout=60, stream=True, allow_redirects=True)
-
         print(f"[Update] Status: {resp.status_code}")
 
         if resp.status_code != 200:
@@ -102,38 +102,23 @@ def download_and_install(dl_url: str, new_version: str):
             tmp.write(chunk)
         tmp.close()
 
-        print(f"[Update] Scheduling install of v{new_version}...")
+        print(f"[Update] Triggering installer for v{new_version}...")
 
-        # Launch a hidden PowerShell that:
-        #   1. Waits for THIS process (by PID) to fully exit
-        #   2. Sleeps 2 s so file handles are fully released
-        #   3. Runs the installer elevated (triggers UAC for the user)
-        # Using Wait-Process is more reliable than batch PID polling and
-        # Start-Process -Verb RunAs correctly handles UAC elevation.
-        current_pid = os.getpid()
-        installer = tmp.name.replace("'", "''")  # escape single quotes for PS
-        ps_cmd = (
-            f"Wait-Process -Id {current_pid} -ErrorAction SilentlyContinue; "
-            "Start-Sleep -Seconds 2; "
-            f"Start-Process -FilePath '{installer}' "
-            "-ArgumentList '/SILENT', '/NORESTART' "
-            "-Verb RunAs -Wait; "
-            f"Remove-Item -LiteralPath '{installer}' -Force -ErrorAction SilentlyContinue"
+        # ShellExecuteW with "runas" is non-blocking: it posts the UAC
+        # elevation request to the OS and returns immediately, before the
+        # installer touches any files. We then exit right away so Windows
+        # fully releases the lock on TetrapakReport.exe. By the time the
+        # user approves UAC and the installer reaches its file-copy phase,
+        # this process is already gone and the exe is writable.
+        rc = ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", tmp.name, "/SILENT /NORESTART", None, 1
         )
 
-        subprocess.Popen(
-            [
-                "powershell.exe",
-                "-NoProfile",
-                "-ExecutionPolicy", "Bypass",
-                "-WindowStyle", "Hidden",
-                "-Command", ps_cmd,
-            ],
-            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
-            close_fds=True,
-        )
+        if rc <= 32:
+            print(f"[Update] ShellExecute failed (code {rc}). Installer at: {tmp.name}")
+            return
 
-        print("[Update] Installer scheduled via PowerShell. Exiting...")
+        print("[Update] UAC prompt open. Exiting so installer can overwrite files...")
         time.sleep(1)
         os._exit(0)
 
