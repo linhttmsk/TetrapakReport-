@@ -104,38 +104,36 @@ def download_and_install(dl_url: str, new_version: str):
 
         print(f"[Update] Scheduling install of v{new_version}...")
 
-        # Write a batch script that waits for THIS process to fully exit,
-        # then runs the installer — avoids file-lock conflicts from replacing
-        # the running executable.
+        # Launch a hidden PowerShell that:
+        #   1. Waits for THIS process (by PID) to fully exit
+        #   2. Sleeps 2 s so file handles are fully released
+        #   3. Runs the installer elevated (triggers UAC for the user)
+        # Using Wait-Process is more reliable than batch PID polling and
+        # Start-Process -Verb RunAs correctly handles UAC elevation.
         current_pid = os.getpid()
-        batch_content = (
-            "@echo off\n"
-            ":wait\n"
-            f'tasklist /FI "PID eq {current_pid}" 2>NUL | find /I /N "{current_pid}">NUL\n'
-            'if "%ERRORLEVEL%"=="0" (\n'
-            "    timeout /t 1 /nobreak > nul\n"
-            "    goto wait\n"
-            ")\n"
-            f'start "" /WAIT "{tmp.name}" /SILENT /NORESTART\n'
-            'del "%~f0"\n'
+        installer = tmp.name.replace("'", "''")  # escape single quotes for PS
+        ps_cmd = (
+            f"Wait-Process -Id {current_pid} -ErrorAction SilentlyContinue; "
+            "Start-Sleep -Seconds 2; "
+            f"Start-Process -FilePath '{installer}' "
+            "-ArgumentList '/SILENT', '/NORESTART' "
+            "-Verb RunAs -Wait; "
+            f"Remove-Item -LiteralPath '{installer}' -Force -ErrorAction SilentlyContinue"
         )
 
-        batch_file = tempfile.NamedTemporaryFile(
-            delete=False, suffix=".bat",
-            prefix="TetrapakReport_Update_",
-            mode="w"
-        )
-        batch_file.write(batch_content)
-        batch_file.close()
-
-        # DETACHED_PROCESS keeps the batch script alive after we exit
         subprocess.Popen(
-            ["cmd.exe", "/c", batch_file.name],
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy", "Bypass",
+                "-WindowStyle", "Hidden",
+                "-Command", ps_cmd,
+            ],
             creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
             close_fds=True,
         )
 
-        print("[Update] Update scheduled. Exiting so installer can replace files...")
+        print("[Update] Installer scheduled via PowerShell. Exiting...")
         time.sleep(1)
         os._exit(0)
 
