@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import requests
+import subprocess
 import tempfile
 import threading
 import webbrowser
@@ -77,8 +78,6 @@ def compare_version(v1: str, v2: str) -> int:
 
 def download_and_install(dl_url: str, new_version: str):
     try:
-        import ctypes
-
         print(f"[Update] Downloading v{new_version}...")
 
         session = requests.Session()
@@ -104,21 +103,16 @@ def download_and_install(dl_url: str, new_version: str):
 
         print(f"[Update] Triggering installer for v{new_version}...")
 
-        # ShellExecuteW with "runas" is non-blocking: it posts the UAC
-        # elevation request to the OS and returns immediately, before the
-        # installer touches any files. We then exit right away so Windows
-        # fully releases the lock on TetrapakReport.exe. By the time the
-        # user approves UAC and the installer reaches its file-copy phase,
-        # this process is already gone and the exe is writable.
-        rc = ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", tmp.name, "/SILENT /NORESTART", None, 1
+        # Installer uses PrivilegesRequired=lowest (installs to %LOCALAPPDATA%),
+        # so no admin/UAC is needed. Launch it detached, then exit immediately
+        # so the file lock on TetrapakReport.exe is released before the
+        # installer's CloseApplications+file-copy phase runs.
+        subprocess.Popen(
+            [tmp.name, "/SILENT", "/NORESTART"],
+            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
         )
 
-        if rc <= 32:
-            print(f"[Update] ShellExecute failed (code {rc}). Installer at: {tmp.name}")
-            return
-
-        print("[Update] UAC prompt open. Exiting so installer can overwrite files...")
+        print("[Update] Installer launched. Exiting so files can be replaced...")
         time.sleep(1)
         os._exit(0)
 
