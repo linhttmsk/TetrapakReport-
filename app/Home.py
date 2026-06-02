@@ -104,7 +104,7 @@ with st.expander("Navigate to:", True):
         card("🚢", "Daily Shipment",      "View, edit and import daily shipment records",  "/Daily_Shipment")
         card("🚛", "OPS Loading",         "Operational loading management",                "/OPS_Loading")
         card("📊", "Loading Performance", "Performance tracking and analytics",            "/Loading_Performance")
-        card("🗄️", "Container Inventory", "Container stock and tracking",                  "/Container_Inventory")
+        # card("🗄️", "Container Inventory", "Container stock and tracking",                  "/Container_Inventory")
 
     with col2:
         st.markdown("#### 📑 Reports")
