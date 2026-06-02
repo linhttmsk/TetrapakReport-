@@ -3,8 +3,12 @@ pages/2_OPS_Loading.py — dummy
 """
 import streamlit as st
 import pandas as pd
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+import nav  # type: ignore
 
 st.set_page_config(page_title="OPS Loading", page_icon="🚛", layout="wide")
+nav.sidebar()
 st.title("🚛 OPS Loading")
 st.divider()
 
