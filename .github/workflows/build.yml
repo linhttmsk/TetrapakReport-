@@ -36,7 +36,14 @@ jobs:
             --copy-metadata pyodbc `
             --collect-all streamlit `
             --collect-all pyodbc `
+            --collect-all keyring `
+            --collect-all azure.identity `
+            --collect-all azure.keyvault.secrets `
+            --collect-all azure.core `
             --hidden-import pyodbc `
+            --hidden-import keyring.backends.Windows `
+            --hidden-import azure.identity `
+            --hidden-import azure.keyvault.secrets `
             --add-data "app/.streamlit;app/.streamlit" `
             --add-data "app/src;app/src" `
             --add-data "app/pages;app/pages" `
