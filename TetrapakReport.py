@@ -18,11 +18,7 @@ import psutil
 from configparser import ConfigParser
 
 # ── Config ──
-GITHUB_OWNER = "linhttmsk"
-GITHUB_REPO  = "TetrapakReport-"
-GITHUB_API   = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
-GITHUB_TOKEN = "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"  # ← thêm dòng này
-PORT         = 8502
+
 
 
 def resolve_path(path):
