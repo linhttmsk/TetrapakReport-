@@ -18,7 +18,10 @@ import psutil
 from configparser import ConfigParser
 
 # ── Config ──
-
+GITHUB_OWNER = "linhttmsk"
+GITHUB_REPO  = "TetrapakReport-"
+GITHUB_API   = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
+PORT         = 8502
 
 
 def resolve_path(path):
@@ -38,25 +41,16 @@ def get_current_version() -> str:
 
 def get_latest_version() -> tuple:
     try:
-        headers = {
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
-            "Accept": "application/vnd.github+json"
-        }
-        resp = requests.get(GITHUB_API, timeout=5, headers=headers)
+        resp = requests.get(GITHUB_API, timeout=5, headers={"Accept": "application/vnd.github+json"})
         if resp.status_code != 200:
             return "", ""
         data   = resp.json()
         tag    = data.get("tag_name", "").lstrip("v")
         assets = data.get("assets", [])
-        dl_url = ""
         for asset in assets:
-            name = asset.get("name", "")
-            if name.endswith("_Setup.exe") or name.endswith(".exe"):
-                # Dùng asset id để download đúng cách
-                asset_id = asset.get("id")
-                dl_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/assets/{asset_id}"
-                break
-        return tag, dl_url
+            if asset.get("name", "").endswith(".exe"):
+                return tag, asset.get("browser_download_url", "")
+        return tag, ""
     except:
         return "", ""
 
@@ -76,13 +70,7 @@ def download_and_install(dl_url: str, new_version: str):
     try:
         print(f"[Update] Downloading v{new_version}...")
 
-        session = requests.Session()
-        session.headers.update({
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
-            "Accept": "application/octet-stream"
-        })
-
-        resp = session.get(dl_url, timeout=60, stream=True, allow_redirects=True)
+        resp = requests.get(dl_url, timeout=60, stream=True, allow_redirects=True)
         print(f"[Update] Status: {resp.status_code}")
 
         if resp.status_code != 200:
