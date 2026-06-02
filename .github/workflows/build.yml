@@ -35,6 +35,8 @@ jobs:
             --copy-metadata pandas `
             --copy-metadata pyodbc `
             --collect-all streamlit `
+            --collect-all pyodbc `
+            --hidden-import pyodbc `
             --add-data "app/.streamlit;app/.streamlit" `
             --add-data "app/src;app/src" `
             --add-data "app/pages;app/pages" `
